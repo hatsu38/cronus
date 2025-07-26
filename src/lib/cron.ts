@@ -41,9 +41,10 @@ export function getNextExecutionTimes(
   timezone: string = 'UTC'
 ): string[] {
   try {
+    // Parse with UTC timezone to get the actual cron execution times
     const interval = cronParser.parse(cronExpression, {
       currentDate: new Date(),
-      tz: timezone
+      tz: 'UTC'
     });
     
     const nextTimes: string[] = [];
@@ -52,6 +53,7 @@ export function getNextExecutionTimes(
     
     for (let i = 0; i < count; i++) {
       const next = interval.next();
+      // Convert UTC execution time to the selected timezone for display
       nextTimes.push(formatInTimeZone(next.toDate(), timezone, dateFormat));
     }
     

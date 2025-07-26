@@ -29,7 +29,7 @@ export default function CronEditor() {
     setIsValid(valid);
     
     if (valid) {
-      setDescription(describeCronExpressionI18n(cronExpression, t, language));
+      setDescription(describeCronExpressionI18n(cronExpression, t, language, timezone));
       setNextExecutions(getNextExecutionTimes(cronExpression, 10, timezone));
     } else {
       setDescription(t('invalidExpression'));
@@ -108,7 +108,7 @@ export default function CronEditor() {
 
           {isValid && nextExecutions.length > 0 && (
             <div className="bg-white rounded-lg shadow-lg p-6">
-              <h2 className="text-xl font-semibold mb-4">{t('nextExecutions', { count: 10 })}</h2>
+              <h2 className="text-xl font-semibold mb-4">{t('nextExecutions', { count: 10, timezone })}</h2>
               <div className="space-y-2 max-h-80 overflow-y-auto">
                 {nextExecutions.map((time, index) => (
                   <div key={index} className="flex items-center space-x-3">

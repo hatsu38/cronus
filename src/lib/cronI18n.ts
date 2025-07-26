@@ -1,15 +1,17 @@
 import { CronParts } from './cron';
 import { TFunction } from 'i18next';
+import { formatInTimeZone } from 'date-fns-tz';
 
 export function describeCronExpressionI18n(
   cronExpression: string,
   t: TFunction,
-  language: string
+  language: string,
+  timezone: string = 'UTC'
 ): string {
   const parts = parseCronExpression(cronExpression);
   if (!parts) return t('invalidExpression');
 
-  return buildCronDescription(parts, t, language);
+  return buildCronDescription(parts, t, language, timezone);
 }
 
 function parseCronExpression(cronExpression: string): CronParts | null {
@@ -28,19 +30,34 @@ function parseCronExpression(cronExpression: string): CronParts | null {
   };
 }
 
-function buildCronDescription(parts: CronParts, t: TFunction, language: string): string {
+function buildCronDescription(parts: CronParts, t: TFunction, language: string, timezone: string): string {
   const { minute, hour, dayOfMonth, month, dayOfWeek } = parts;
   
   if (language === 'ja') {
-    return buildJapaneseDescription(parts, t);
+    return buildJapaneseDescription(parts, t, timezone);
   } else if (language === 'ko') {
-    return buildKoreanDescription(parts, t);
+    return buildKoreanDescription(parts, t, timezone);
   } else {
-    return buildEnglishDescription(parts, t);
+    return buildEnglishDescription(parts, t, timezone);
   }
 }
 
-function buildEnglishDescription(parts: CronParts, t: TFunction): string {
+function getTimeExampleInTimezone(hour: string, minute: string, timezone: string): string {
+  if (hour === '*' || minute === '*') return '';
+  
+  try {
+    // Create a sample UTC date with the specified hour and minute
+    const utcDate = new Date();
+    utcDate.setUTCHours(parseInt(hour), parseInt(minute), 0, 0);
+    
+    // Format it in the target timezone
+    return formatInTimeZone(utcDate, timezone, 'HH:mm');
+  } catch {
+    return '';
+  }
+}
+
+function buildEnglishDescription(parts: CronParts, t: TFunction, timezone: string): string {
   const { minute, hour, dayOfMonth, month, dayOfWeek } = parts;
   let description = t('run') + ' ';
   
@@ -99,10 +116,16 @@ function buildEnglishDescription(parts: CronParts, t: TFunction): string {
     }
   }
   
+  // Add timezone example if we have specific hour and minute
+  const timeExample = getTimeExampleInTimezone(hour, minute, timezone);
+  if (timeExample && timezone !== 'UTC') {
+    description += ` (${timeExample} in ${timezone})`;
+  }
+  
   return description;
 }
 
-function buildJapaneseDescription(parts: CronParts, t: TFunction): string {
+function buildJapaneseDescription(parts: CronParts, t: TFunction, timezone: string): string {
   const { minute, hour, dayOfMonth, month, dayOfWeek } = parts;
   let description = '';
   
@@ -166,10 +189,16 @@ function buildJapaneseDescription(parts: CronParts, t: TFunction): string {
     description += `${minute}${t('minute')}${t('at')}${t('run')}`;
   }
   
+  // Add timezone example if we have specific hour and minute
+  const timeExample = getTimeExampleInTimezone(hour, minute, timezone);
+  if (timeExample && timezone !== 'UTC') {
+    description += ` (${timezone}では${timeExample})`;
+  }
+  
   return description;
 }
 
-function buildKoreanDescription(parts: CronParts, t: TFunction): string {
+function buildKoreanDescription(parts: CronParts, t: TFunction, timezone: string): string {
   const { minute, hour, dayOfMonth, month, dayOfWeek } = parts;
   let description = '';
   
@@ -231,6 +260,12 @@ function buildKoreanDescription(parts: CronParts, t: TFunction): string {
     description += `${minute}${t('minute')}${t('at')} ${t('run')}`;
   } else {
     description += `${minute}${t('minute')}${t('at')} ${t('run')}`;
+  }
+  
+  // Add timezone example if we have specific hour and minute
+  const timeExample = getTimeExampleInTimezone(hour, minute, timezone);
+  if (timeExample && timezone !== 'UTC') {
+    description += ` (${timezone}에서 ${timeExample})`;
   }
   
   return description.trim();
