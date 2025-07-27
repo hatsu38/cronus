@@ -4,7 +4,7 @@ import { initReactI18next } from "react-i18next";
 const resources = {
   en: {
     translation: {
-      title: "Cronus",
+      title: "CRONUS",
       subtitle: "Cron Expression Editor",
       cronExpression: "Cron Expression",
       timezone: "Timezone",
@@ -109,7 +109,7 @@ const resources = {
   },
   ja: {
     translation: {
-      title: "Cronus",
+      title: "CRONUS",
       subtitle: "Cron式エディター",
       cronExpression: "Cron式",
       timezone: "タイムゾーン",

@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Cronus",
+  title: "CRONUS",
   description: "Cron Expression Editor",
 };
 

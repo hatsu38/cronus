@@ -11,6 +11,8 @@ import {
   timezoneLanguageMapping,
 } from "@/lib/cron";
 import { describeCronExpressionI18n } from "@/lib/cronI18n";
+import Logo from "./logo.png";
+import Image from "next/image";
 import "@/lib/i18n";
 
 export default function CronEditor() {
@@ -28,6 +30,9 @@ export default function CronEditor() {
   const [isValid, setIsValid] = useState(true);
   const [description, setDescription] = useState("");
   const [nextExecutions, setNextExecutions] = useState<string[]>([]);
+  const [selectedCommonExpression, setSelectedCommonExpression] = useState<
+    string | null
+  >(null);
 
   // URL パラメータを更新する関数
   const updateURL = (cron: string, tz: string) => {
@@ -61,6 +66,12 @@ export default function CronEditor() {
       setDescription(t("invalidExpression"));
       setNextExecutions([]);
     }
+
+    // 選択中のcommon expressionを更新
+    const matchingExpression = commonCronExpressions.find(
+      (item) => item.expression === cronExpression,
+    );
+    setSelectedCommonExpression(matchingExpression?.expression || null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cronExpression, timezone]);
 
@@ -84,173 +95,335 @@ export default function CronEditor() {
   const cronParts = parseCronExpression(cronExpression);
 
   return (
-    <div className="max-w-6xl mx-auto p-6 space-y-8">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold text-gray-900 mb-2">{t("title")}</h1>
-        <p className="text-gray-600">{t("subtitle")}</p>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="space-y-6">
-          <div className="bg-white rounded-lg shadow-lg p-6">
-            <h2 className="text-xl font-semibold mb-4">
-              {t("cronExpression")}
-            </h2>
-
-            <div className="space-y-4">
-              <div>
-                <input
-                  type="text"
-                  value={cronExpression}
-                  onChange={handleCronChange}
-                  className={`w-full px-4 py-3 text-lg font-mono border-2 rounded-lg focus:outline-none focus:ring-2 text-gray-900 placeholder-gray-500 ${
-                    isValid
-                      ? "border-green-300 focus:border-green-500 focus:ring-green-200"
-                      : "border-red-300 focus:border-red-500 focus:ring-red-200"
-                  }`}
-                  placeholder="0 17 * * *"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {t("timezone")}
-                </label>
-                <select
-                  value={timezone}
-                  onChange={handleTimezoneChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
-                >
-                  {Object.entries(timezoneLanguageMapping).map(([timezone]) => (
-                    <option key={timezone} value={timezone}>
-                      {timezone}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div
-                className={`p-4 rounded-lg ${isValid ? "bg-green-50 border border-green-200" : "bg-red-50 border border-red-200"}`}
-              >
-                <h3
-                  className={`font-medium ${isValid ? "text-green-800" : "text-red-800"}`}
-                >
-                  {isValid ? t("validExpression") : t("invalidExpression")}
-                </h3>
-                <p
-                  className={`mt-1 ${isValid ? "text-green-700" : "text-red-700"}`}
-                >
-                  {description}
-                </p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+      <div className="max-w-7xl mx-auto p-6 space-y-8">
+        {/* Header with improved styling */}
+        <div className="text-center py-8">
+          <div className="flex items-center justify-center mb-4 gap-3">
+            <div className="relative">
+              <Image
+                src={Logo}
+                alt="CRONUS"
+                className="w-16 h-16 rounded-2xl shadow-lg ring-4 ring-white"
+              />
+              <div className="absolute -top-1 -right-1 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
               </div>
             </div>
+            <div>
+              <h1 className="text-5xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">
+                {t("title")}
+              </h1>
+              <p className="text-lg text-slate-600 mt-1 font-medium">
+                {t("subtitle")}
+              </p>
+            </div>
           </div>
+        </div>
 
-          {isValid && nextExecutions.length > 0 && (
-            <div className="bg-white rounded-lg shadow-lg p-6">
-              <h2 className="text-xl font-semibold mb-4">
-                {t("nextExecutions", { count: 3, timezone })}
-              </h2>
-              <div className="space-y-2 max-h-80 overflow-y-auto">
-                {nextExecutions.map((time, index) => (
-                  <div key={index} className="flex items-center space-x-3">
-                    <span className="w-6 h-6 bg-blue-100 text-blue-800 rounded-full flex items-center justify-center text-xs font-medium">
-                      {index + 1}
-                    </span>
-                    <span className="font-mono text-sm text-gray-900">
-                      {time}
-                    </span>
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+          {/* Left Column - Main Editor */}
+          <div className="xl:col-span-2 space-y-6">
+            {/* Cron Expression Input */}
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/50 p-8">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-3 h-3 bg-blue-500 rounded-full" />
+                <h2 className="text-2xl font-bold text-slate-800">
+                  {t("cronExpression")}
+                </h2>
+              </div>
+
+              <div className="space-y-6">
+                <div className="relative group">
+                  <input
+                    type="text"
+                    value={cronExpression}
+                    onChange={handleCronChange}
+                    className={`w-full px-6 py-4 text-xl font-mono border-2 rounded-xl focus:outline-none focus:ring-4 text-slate-800 placeholder-slate-400 transition-all duration-200 ${
+                      isValid
+                        ? "border-emerald-300 focus:border-emerald-500 focus:ring-emerald-200 bg-emerald-50/50"
+                        : "border-red-300 focus:border-red-500 focus:ring-red-200 bg-red-50/50"
+                    }`}
+                    placeholder="0 17 * * *"
+                  />
+                  <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
+                    {isValid ? (
+                      <div className="w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center">
+                        <svg
+                          className="w-4 h-4 text-white"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M5 13l4 4L19 7"
+                          />
+                        </svg>
+                      </div>
+                    ) : (
+                      <div className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
+                        <svg
+                          className="w-4 h-4 text-white"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M6 18L18 6M6 6l12 12"
+                          />
+                        </svg>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-3">
+                    {t("timezone")}
+                  </label>
+                  <select
+                    value={timezone}
+                    onChange={handleTimezoneChange}
+                    className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-200 focus:border-blue-500 text-slate-700 bg-white/80 backdrop-blur-sm transition-all duration-200"
+                  >
+                    {Object.entries(timezoneLanguageMapping).map(
+                      ([timezone]) => (
+                        <option key={timezone} value={timezone}>
+                          {timezone}
+                        </option>
+                      ),
+                    )}
+                  </select>
+                </div>
+
+                {/* Status Card with Animation */}
+                <div
+                  className={`p-6 rounded-xl border-2 transition-all duration-300 ${
+                    isValid
+                      ? "bg-gradient-to-r from-emerald-50 to-green-50 border-emerald-200 shadow-emerald-100 shadow-lg"
+                      : "bg-gradient-to-r from-red-50 to-rose-50 border-red-200 shadow-red-100 shadow-lg"
+                  }`}
+                >
+                  <div className="flex items-center gap-3 mb-2">
+                    <div
+                      className={`w-2 h-2 rounded-full ${isValid ? "bg-emerald-500" : "bg-red-500"} animate-pulse`}
+                    />
+                    <h3
+                      className={`font-bold text-lg ${isValid ? "text-emerald-800" : "text-red-800"}`}
+                    >
+                      {isValid ? t("validExpression") : t("invalidExpression")}
+                    </h3>
+                  </div>
+                  <p
+                    className={`text-base ${isValid ? "text-emerald-700" : "text-red-700"}`}
+                  >
+                    {description}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Next Executions with improved design */}
+            {isValid && nextExecutions.length > 0 && (
+              <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/50 p-8">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-3 h-3 bg-indigo-500 rounded-full animate-pulse" />
+                  <h2 className="text-2xl font-bold text-slate-800">
+                    {t("nextExecutions", { count: 3, timezone })}
+                  </h2>
+                </div>
+                <div className="space-y-4">
+                  {nextExecutions.map((time, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center space-x-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-100 hover:shadow-md transition-all duration-200"
+                    >
+                      <div className="flex-shrink-0">
+                        <span className="w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-full flex items-center justify-center text-sm font-bold shadow-lg">
+                          {index + 1}
+                        </span>
+                      </div>
+                      <div className="flex-1">
+                        <span className="font-mono text-base text-slate-800 font-medium">
+                          {time}
+                        </span>
+                      </div>
+                      <div className="flex-shrink-0">
+                        <svg
+                          className="w-5 h-5 text-slate-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
+                        </svg>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Cron Format Visualization */}
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/50 p-8">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-3 h-3 bg-purple-500 rounded-full" />
+                <h2 className="text-2xl font-bold text-slate-800">
+                  {t("cronFormat")}
+                </h2>
+              </div>
+              <div className="grid grid-cols-5 gap-4">
+                {[
+                  {
+                    value: cronParts?.minute || "*",
+                    label: t("minute"),
+                    range: "(0-59)",
+                    color: "from-red-400 to-pink-400",
+                  },
+                  {
+                    value: cronParts?.hour || "*",
+                    label: t("hour"),
+                    range: "(0-23)",
+                    color: "from-orange-400 to-red-400",
+                  },
+                  {
+                    value: cronParts?.dayOfMonth || "*",
+                    label: t("day"),
+                    range: "(1-31)",
+                    color: "from-yellow-400 to-orange-400",
+                  },
+                  {
+                    value: cronParts?.month || "*",
+                    label: t("month"),
+                    range: "(1-12)",
+                    color: "from-green-400 to-yellow-400",
+                  },
+                  {
+                    value: cronParts?.dayOfWeek || "*",
+                    label: t("weekday"),
+                    range: "(0-6)",
+                    color: "from-blue-400 to-green-400",
+                  },
+                ].map((field, index) => (
+                  <div key={index} className="text-center group">
+                    <div
+                      className={`font-mono text-xl py-4 bg-gradient-to-br ${field.color} text-white rounded-xl shadow-lg group-hover:shadow-xl transition-all duration-200 font-bold`}
+                    >
+                      {field.value}
+                    </div>
+                    <div className="mt-3 text-slate-700 font-semibold">
+                      {field.label}
+                    </div>
+                    <div className="text-xs text-slate-500 mt-1">
+                      {field.range}
+                    </div>
                   </div>
                 ))}
               </div>
             </div>
-          )}
+          </div>
 
-          <div className="bg-white rounded-lg shadow-lg p-6">
-            <h2 className="text-xl font-semibold mb-4">{t("cronFormat")}</h2>
-            <div className="grid grid-cols-5 gap-2 text-sm">
-              <div className="text-center">
-                <div className="font-mono text-lg py-2 bg-gray-100 rounded">
-                  {cronParts?.minute || "*"}
-                </div>
-                <div className="mt-1 text-gray-600">{t("minute")}</div>
-                <div className="text-xs text-gray-500">(0-59)</div>
+          {/* Right Column - Common Expressions */}
+          <div className="space-y-6">
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/50 p-8 sticky top-6">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-3 h-3 bg-green-500 rounded-full" />
+                <h2 className="text-2xl font-bold text-slate-800">
+                  {t("commonExpressionsTitle")}
+                </h2>
               </div>
-              <div className="text-center">
-                <div className="font-mono text-lg py-2 bg-gray-100 rounded">
-                  {cronParts?.hour || "*"}
-                </div>
-                <div className="mt-1 text-gray-600">{t("hour")}</div>
-                <div className="text-xs text-gray-500">(0-23)</div>
-              </div>
-              <div className="text-center">
-                <div className="font-mono text-lg py-2 bg-gray-100 rounded">
-                  {cronParts?.dayOfMonth || "*"}
-                </div>
-                <div className="mt-1 text-gray-600">{t("day")}</div>
-                <div className="text-xs text-gray-500">(1-31)</div>
-              </div>
-              <div className="text-center">
-                <div className="font-mono text-lg py-2 bg-gray-100 rounded">
-                  {cronParts?.month || "*"}
-                </div>
-                <div className="mt-1 text-gray-600">{t("month")}</div>
-                <div className="text-xs text-gray-500">(1-12)</div>
-              </div>
-              <div className="text-center">
-                <div className="font-mono text-lg py-2 bg-gray-100 rounded">
-                  {cronParts?.dayOfWeek || "*"}
-                </div>
-                <div className="mt-1 text-gray-600">{t("weekday")}</div>
-                <div className="text-xs text-gray-500">(0-6)</div>
+              <div className="space-y-3 max-h-96 overflow-y-auto">
+                {commonCronExpressions.map((item, index) => (
+                  <button
+                    key={index}
+                    onClick={() => selectCommonExpression(item.expression)}
+                    className={`w-full text-left p-4 rounded-xl border-2 transition-all duration-200 group ${
+                      selectedCommonExpression === item.expression
+                        ? "bg-gradient-to-r from-blue-500 to-indigo-500 border-blue-500 text-white shadow-lg"
+                        : "border-slate-200 hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 hover:border-blue-300 bg-white/50"
+                    }`}
+                  >
+                    <div
+                      className={`font-mono text-base font-bold ${
+                        selectedCommonExpression === item.expression
+                          ? "text-white"
+                          : "text-blue-600"
+                      }`}
+                    >
+                      {item.expression}
+                    </div>
+                    <div
+                      className={`text-sm mt-2 ${
+                        selectedCommonExpression === item.expression
+                          ? "text-blue-100"
+                          : "text-slate-600"
+                      }`}
+                    >
+                      {t(item.descriptionKey)}
+                    </div>
+                  </button>
+                ))}
               </div>
             </div>
           </div>
         </div>
 
-        <div className="space-y-6">
-          <div className="bg-white rounded-lg shadow-lg p-6">
-            <h2 className="text-xl font-semibold mb-4">
-              {t("commonExpressionsTitle")}
+        {/* Special Characters Section */}
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/50 p-8">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-3 h-3 bg-amber-500 rounded-full" />
+            <h2 className="text-2xl font-bold text-slate-800">
+              {t("specialCharacters")}
             </h2>
-            <div className="space-y-2">
-              {commonCronExpressions.map((item, index) => (
-                <button
-                  key={index}
-                  onClick={() => selectCommonExpression(item.expression)}
-                  className="w-full text-left p-3 rounded-lg border border-gray-200 hover:bg-blue-50 hover:border-blue-300 transition-colors"
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[
+              {
+                char: "*",
+                desc: t("anyValue"),
+                color: "from-red-400 to-pink-400",
+              },
+              {
+                char: ",",
+                desc: t("valueListSeparator"),
+                color: "from-orange-400 to-red-400",
+              },
+              {
+                char: "-",
+                desc: t("rangeOfValues"),
+                color: "from-yellow-400 to-orange-400",
+              },
+              {
+                char: "/",
+                desc: t("stepValues"),
+                color: "from-green-400 to-yellow-400",
+              },
+            ].map((item, index) => (
+              <div
+                key={index}
+                className="flex items-center gap-4 p-4 bg-gradient-to-r from-slate-50 to-gray-50 rounded-xl border border-slate-200 hover:shadow-md transition-all duration-200"
+              >
+                <div
+                  className={`w-12 h-12 bg-gradient-to-br ${item.color} rounded-xl flex items-center justify-center shadow-lg`}
                 >
-                  <div className="font-mono text-blue-600">
-                    {item.expression}
-                  </div>
-                  <div className="text-sm text-gray-600 mt-1">
-                    {t(item.descriptionKey)}
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="bg-gray-50 rounded-lg p-6">
-        <h2 className="text-lg font-semibold mb-3">{t("specialCharacters")}</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
-          <div>
-            <span className="font-mono font-bold">*</span>
-            <span className="ml-2">{t("anyValue")}</span>
-          </div>
-          <div>
-            <span className="font-mono font-bold">,</span>
-            <span className="ml-2">{t("valueListSeparator")}</span>
-          </div>
-          <div>
-            <span className="font-mono font-bold">-</span>
-            <span className="ml-2">{t("rangeOfValues")}</span>
-          </div>
-          <div>
-            <span className="font-mono font-bold">/</span>
-            <span className="ml-2">{t("stepValues")}</span>
+                  <span className="font-mono font-bold text-xl text-white">
+                    {item.char}
+                  </span>
+                </div>
+                <span className="text-slate-700 font-medium">{item.desc}</span>
+              </div>
+            ))}
           </div>
         </div>
       </div>
