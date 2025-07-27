@@ -1,6 +1,7 @@
 # CRONUS 🕰️
 
 **A Beautiful, Multilingual Cron Expression Editor with Real-time Visualization**
+<img width="2862" height="3381" alt="320b6946-e303-4fed-bf77-ad3f4248116d" src="https://github.com/user-attachments/assets/cc7443c2-2524-4aee-878d-adaeed37aabf" />
 
 [![Next.js](https://img.shields.io/badge/Next.js-15.4.4-black?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org/)
 [![React](https://img.shields.io/badge/React-19.1.0-blue?style=for-the-badge&logo=react&logoColor=white)](https://reactjs.org/)
