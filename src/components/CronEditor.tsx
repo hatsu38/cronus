@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { 
   validateCronExpression, 
   getNextExecutionTimes,
@@ -14,11 +15,38 @@ import '@/lib/i18n';
 
 export default function CronEditor() {
   const { t, i18n } = useTranslation();
-  const [cronExpression, setCronExpression] = useState('0 17 * * *');
-  const [timezone, setTimezone] = useState('Asia/Tokyo');
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  
+  // URL パラメータから初期値を取得
+  const [cronExpression, setCronExpression] = useState(() => {
+    return searchParams.get('cron') || '* * * * *';
+  });
+  const [timezone, setTimezone] = useState(() => {
+    return searchParams.get('timezone') || 'UTC';
+  });
   const [isValid, setIsValid] = useState(true);
   const [description, setDescription] = useState('');
   const [nextExecutions, setNextExecutions] = useState<string[]>([]);
+
+  // URL パラメータを更新する関数
+  const updateURL = (cron: string, tz: string) => {
+    const params = new URLSearchParams();
+    params.set('cron', cron);
+    params.set('timezone', tz);
+    router.replace(`?${params.toString()}`, { scroll: false });
+  };
+
+  // 初回レンダリング時にURLパラメータが空の場合、デフォルト値でURLを更新
+  useEffect(() => {
+    const urlCron = searchParams.get('cron');
+    const urlTimezone = searchParams.get('timezone');
+    
+    if (!urlCron || !urlTimezone) {
+      updateURL(cronExpression, timezone);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // 空の依存配列で初回のみ実行
 
   useEffect(() => {
     i18n.changeLanguage(timezoneLanguageMapping[timezone]);
@@ -39,14 +67,18 @@ export default function CronEditor() {
   const handleCronChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
     setCronExpression(newValue);
+    updateURL(newValue, timezone);
   };
 
   const handleTimezoneChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setTimezone(e.target.value);
+    const newTimezone = e.target.value;
+    setTimezone(newTimezone);
+    updateURL(cronExpression, newTimezone);
   };
 
   const selectCommonExpression = (expression: string) => {
     setCronExpression(expression);
+    updateURL(expression, timezone);
   };
 
   const cronParts = parseCronExpression(cronExpression);
