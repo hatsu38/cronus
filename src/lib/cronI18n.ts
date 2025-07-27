@@ -32,14 +32,33 @@ function parseCronExpression(cronExpression: string): CronParts | null {
 
 function buildCronDescription(parts: CronParts, t: TFunction, language: string, timezone: string): string {
   const { minute, hour, dayOfMonth, month, dayOfWeek } = parts;
+  const descriptionOrder = t('descriptionOrder', { returnObjects: true }) as string[];
   
-  if (language === 'ja') {
-    return buildJapaneseDescription(parts, t, timezone);
-  } else if (language === 'ko') {
-    return buildKoreanDescription(parts, t, timezone);
-  } else {
-    return buildEnglishDescription(parts, t, timezone);
+  // Build description parts using i18n configuration
+  const descriptionParts: Record<string, string> = {
+    run: buildRunDescription(t),
+    minute: buildMinuteDescription(minute, t),
+    hour: buildHourDescription(hour, t),
+    dayOfMonth: buildDayOfMonthDescription(dayOfMonth, t),
+    month: buildMonthDescription(month, t),
+    dayOfWeek: buildDayOfWeekDescription(dayOfWeek, t)
+  };
+  
+  // Filter out empty parts and build description in language-specific order
+  const filteredParts = descriptionOrder
+    .map(part => descriptionParts[part])
+    .filter(part => part !== '');
+  
+  let description = filteredParts.join('');
+  
+  // Add timezone example if we have specific hour and minute
+  const timeExample = getTimeExampleInTimezone(hour, minute, timezone);
+  if (timeExample && timezone !== 'UTC') {
+    const suffix = t('timezoneSuffix', { time: timeExample, timezone });
+    description += ` ${suffix}`;
   }
+  
+  return description;
 }
 
 function getTimeExampleInTimezone(hour: string, minute: string, timezone: string): string {
@@ -49,7 +68,8 @@ function getTimeExampleInTimezone(hour: string, minute: string, timezone: string
     // Create a sample UTC date with the specified hour and minute
     const utcDate = new Date();
     utcDate.setUTCHours(parseInt(hour), parseInt(minute), 0, 0);
-    
+    const newDate = formatInTimeZone(utcDate, timezone, 'HH:mm');
+    console.log({newDate});
     // Format it in the target timezone
     return formatInTimeZone(utcDate, timezone, 'HH:mm');
   } catch {
@@ -57,216 +77,151 @@ function getTimeExampleInTimezone(hour: string, minute: string, timezone: string
   }
 }
 
-function buildEnglishDescription(parts: CronParts, t: TFunction, timezone: string): string {
-  const { minute, hour, dayOfMonth, month, dayOfWeek } = parts;
-  let description = t('run') + ' ';
-  
-  // Minute part
-  if (minute === '*') {
-    description += `${t('every')} ${t('minute')}`;
-  } else if (minute.includes('/')) {
-    const [, interval] = minute.split('/');
-    description += `${t('every')} ${interval} ${t('minutes')}`;
-  } else if (minute.includes(',')) {
-    description += `${t('at')} ${t('minutes')} ${minute}`;
-  } else {
-    description += `${t('at')} ${t('minute')} ${minute}`;
-  }
-  
-  // Hour part
-  if (hour !== '*') {
-    if (hour.includes('/')) {
-      const [, interval] = hour.split('/');
-      description += ` ${t('of')} ${t('every')} ${interval} ${t('hours')}`;
-    } else if (hour.includes(',')) {
-      description += ` ${t('of')} ${t('hours')} ${hour}`;
-    } else {
-      description += ` ${t('of')} ${t('hour')} ${hour}`;
-    }
-  }
-  
-  // Day of month part
-  if (dayOfMonth !== '*') {
-    if (dayOfMonth.includes('/')) {
-      const [, interval] = dayOfMonth.split('/');
-      description += ` ${t('on')} ${t('every')} ${interval} ${t('days')}`;
-    } else if (dayOfMonth.includes(',')) {
-      description += ` ${t('on')} ${t('days')} ${dayOfMonth}`;
-    } else {
-      description += ` ${t('on')} ${t('day')} ${dayOfMonth}`;
-    }
-  }
-  
-  // Month part
-  if (month !== '*') {
-    if (month.includes(',')) {
-      description += ` ${t('in')} ${t('months')} ${month}`;
-    } else {
-      description += ` ${t('in')} ${t('month')} ${month}`;
-    }
-  }
-  
-  // Day of week part
-  if (dayOfWeek !== '*') {
-    if (dayOfWeek.includes(',')) {
-      const days = dayOfWeek.split(',').map(d => t(`dayNames.${d}`)).join(', ');
-      description += ` ${t('on')} ${days}`;
-    } else {
-      description += ` ${t('on')} ${t(`dayNames.${dayOfWeek}`)}`;
-    }
-  }
-  
-  // Add timezone example if we have specific hour and minute
-  const timeExample = getTimeExampleInTimezone(hour, minute, timezone);
-  if (timeExample && timezone !== 'UTC') {
-    description += ` (${timeExample} in ${timezone})`;
-  }
-  
-  return description;
+function buildRunDescription(t: TFunction): string {
+  const useSpaces = t('useSpaces');
+  const space = useSpaces ? ' ' : '';
+  return useSpaces ? `${t('run')}${space}` : '';
 }
 
-function buildJapaneseDescription(parts: CronParts, t: TFunction, timezone: string): string {
-  const { minute, hour, dayOfMonth, month, dayOfWeek } = parts;
-  let description = '';
+function buildMinuteDescription(minute: string, t: TFunction): string {
+  const useSpaces = t('useSpaces');
+  const space = useSpaces ? ' ' : '';
   
-  // Day of week part
-  if (dayOfWeek !== '*') {
-    if (dayOfWeek.includes(',')) {
-      const days = dayOfWeek.split(',').map(d => t(`dayNames.${d}`)).join('、');
-      description += `${days}${t('on')}`;
-    } else if (dayOfWeek.includes('/')) {
-      const [, interval] = dayOfWeek.split('/');
-      description += `${interval}日間隔で`;
-    } else {
-      description += `${t(`dayNames.${dayOfWeek}`)}${t('on')}`;
-    }
-  }
-  
-  // Month part
-  if (month !== '*') {
-    if (month.includes(',')) {
-      description += `${month}${t('month')}${t('on')}`;
-    } else {
-      description += `${month}${t('month')}${t('on')}`;
-    }
-  }
-  
-  // Day of month part
-  if (dayOfMonth !== '*') {
-    if (dayOfMonth.includes('/')) {
-      const [, interval] = dayOfMonth.split('/');
-      description += `${interval}${t('days')}間隔で`;
-    } else if (dayOfMonth.includes(',')) {
-      description += `${dayOfMonth}${t('day')}${t('on')}`;
-    } else {
-      description += `${dayOfMonth}${t('day')}${t('on')}`;
-    }
-  }
-  
-  // Hour part
-  if (hour !== '*') {
-    if (hour.includes('/')) {
-      const [, interval] = hour.split('/');
-      description += `${interval}${t('hours')}間隔で`;
-    } else if (hour.includes(',')) {
-      description += `${hour}${t('hour')}${t('on')}`;
-    } else {
-      description += `${hour}${t('hour')}`;
-    }
-  } else {
-    description += `${t('every')}${t('hour')}`;
-  }
-  
-  // Minute part
   if (minute === '*') {
-    description += `${t('every')}${t('minute')}${t('run')}`;
+    if (useSpaces) {
+      return `${t('every')}${space}${t('minute')}`;
+    } else {
+      return `${t('every')}${t('minute')}${t('run')}`;
+    }
   } else if (minute.includes('/')) {
     const [, interval] = minute.split('/');
-    description += `${interval}${t('minutes')}間隔で${t('run')}`;
+    if (useSpaces) {
+      return `${t('every')}${space}${interval}${space}${t('minutes')}`;
+    } else {
+      return `${interval}${t('minutes')}${t('interval')}${t('run')}`;
+    }
   } else if (minute.includes(',')) {
-    description += `${minute}${t('minute')}${t('at')}${t('run')}`;
+    if (useSpaces) {
+      return `${t('at')}${space}${t('minutes')}${space}${minute}`;
+    } else {
+      return `${minute}${t('minute')}${t('at')}${t('run')}`;
+    }
   } else {
-    description += `${minute}${t('minute')}${t('at')}${t('run')}`;
+    if (useSpaces) {
+      return `${t('at')}${space}${t('minute')}${space}${minute}`;
+    } else {
+      return `${minute}${t('minute')}${t('at')}${t('run')}`;
+    }
   }
-  
-  // Add timezone example if we have specific hour and minute
-  const timeExample = getTimeExampleInTimezone(hour, minute, timezone);
-  if (timeExample && timezone !== 'UTC') {
-    description += ` (${timezone}では${timeExample})`;
-  }
-  
-  return description;
 }
 
-function buildKoreanDescription(parts: CronParts, t: TFunction, timezone: string): string {
-  const { minute, hour, dayOfMonth, month, dayOfWeek } = parts;
-  let description = '';
+function buildHourDescription(hour: string, t: TFunction): string {
+  const useSpaces = t('useSpaces');
+  const space = useSpaces ? ' ' : '';
   
-  // Day of week part
-  if (dayOfWeek !== '*') {
-    if (dayOfWeek.includes(',')) {
-      const days = dayOfWeek.split(',').map(d => t(`dayNames.${d}`)).join(', ');
-      description += `${days} `;
-    } else if (dayOfWeek.includes('/')) {
-      const [, interval] = dayOfWeek.split('/');
-      description += `${interval}일 간격으로 `;
-    } else {
-      description += `${t(`dayNames.${dayOfWeek}`)} `;
-    }
+  if (hour === '*') {
+    return useSpaces ? '' : `${t('every')}${t('hour')}`;
   }
   
-  // Month part
-  if (month !== '*') {
-    if (month.includes(',')) {
-      description += `${month}${t('month')} `;
-    } else {
-      description += `${month}${t('month')} `;
-    }
-  }
-  
-  // Day of month part
-  if (dayOfMonth !== '*') {
-    if (dayOfMonth.includes('/')) {
-      const [, interval] = dayOfMonth.split('/');
-      description += `${interval}${t('days')} 간격으로 `;
-    } else if (dayOfMonth.includes(',')) {
-      description += `${dayOfMonth}${t('day')} `;
-    } else {
-      description += `${dayOfMonth}${t('day')} `;
-    }
-  }
-  
-  // Hour part
-  if (hour !== '*') {
+  if (useSpaces) {
     if (hour.includes('/')) {
       const [, interval] = hour.split('/');
-      description += `${interval}${t('hours')} 간격으로 `;
+      return `${space}${t('of')}${space}${t('every')}${space}${interval}${space}${t('hours')}`;
     } else if (hour.includes(',')) {
-      description += `${hour}${t('hour')} `;
+      return `${space}${t('of')}${space}${t('hours')}${space}${hour}`;
     } else {
-      description += `${hour}${t('hour')} `;
+      return `${space}${t('of')}${space}${t('hour')}${space}${hour}`;
     }
-  } else if (minute !== '*') {
-    description += `${t('every')}${t('hour')} `;
-  }
-  
-  // Minute part
-  if (minute === '*') {
-    description += `${t('every')}${t('minute')} ${t('run')}`;
-  } else if (minute.includes('/')) {
-    const [, interval] = minute.split('/');
-    description += `${interval}${t('minutes')}마다 ${t('run')}`;
-  } else if (minute.includes(',')) {
-    description += `${minute}${t('minute')}${t('at')} ${t('run')}`;
   } else {
-    description += `${minute}${t('minute')}${t('at')} ${t('run')}`;
+    if (hour.includes('/')) {
+      const [, interval] = hour.split('/');
+      return `${interval}${t('hours')}${t('interval')}`;
+    } else if (hour.includes(',')) {
+      return `${hour}${t('hour')}${t('on')}`;
+    } else {
+      return `${hour}${t('hour')}`;
+    }
   }
-  
-  // Add timezone example if we have specific hour and minute
-  const timeExample = getTimeExampleInTimezone(hour, minute, timezone);
-  if (timeExample && timezone !== 'UTC') {
-    description += ` (${timezone}에서 ${timeExample})`;
-  }
-  
-  return description.trim();
 }
+
+function buildDayOfMonthDescription(dayOfMonth: string, t: TFunction): string {
+  if (dayOfMonth === '*') {
+    return '';
+  }
+
+  const useSpaces = t('useSpaces');
+  const space = useSpaces ? ' ' : '';
+
+  if (useSpaces) {
+    if (dayOfMonth.includes('/')) {
+      const [, interval] = dayOfMonth.split('/');
+      return `${space}${t('on')}${space}${t('every')}${space}${interval}${space}${t('days')}`;
+    } else if (dayOfMonth.includes(',')) {
+      return `${space}${t('on')}${space}${t('days')}${space}${dayOfMonth}`;
+    } else {
+      return `${space}${t('on')}${space}${t('day')}${space}${dayOfMonth}`;
+    }
+  } else {
+    if (dayOfMonth.includes('/')) {
+      const [, interval] = dayOfMonth.split('/');
+      return `${interval}${t('days')}${t('interval')}`;
+    } else if (dayOfMonth.includes(',')) {
+      return `${dayOfMonth}${t('day')}${t('on')}`;
+    } else {
+      return `${dayOfMonth}${t('day')}${t('on')}`;
+    }
+  }
+}
+
+function buildMonthDescription(month: string, t: TFunction): string {
+  if (month === '*') {
+    return '';
+  }
+
+  const useSpaces = t('useSpaces');
+  const space = useSpaces ? ' ' : '';
+
+  if (useSpaces) {
+    if (month.includes(',')) {
+      return `${space}${t('in')}${space}${t('months')}${space}${month}`;
+    } else {
+      return `${space}${t('in')}${space}${t('month')}${space}${month}`;
+    }
+  } else {
+    if (month.includes(',')) {
+      return `${month}${t('month')}${t('on')}`;
+    } else {
+      return `${month}${t('month')}${t('on')}`;
+    }
+  }
+}
+
+function buildDayOfWeekDescription(dayOfWeek: string, t: TFunction): string {
+  if (dayOfWeek === '*') {
+    return '';
+  }
+
+  const useSpaces = t('useSpaces');
+  const space = useSpaces ? ' ' : '';
+  const separator = t('dayListSeparator');
+
+  if (useSpaces) {
+    if (dayOfWeek.includes(',')) {
+      const days = dayOfWeek.split(',').map(d => t(`dayNames.${d}`)).join(separator);
+      return `${space}${t('on')}${space}${days}`;
+    } else {
+      return `${space}${t('on')}${space}${t(`dayNames.${dayOfWeek}`)}`;
+    }
+  } else {
+    if (dayOfWeek.includes(',')) {
+      const days = dayOfWeek.split(',').map(d => t(`dayNames.${d}`)).join(separator);
+      return `${days}${t('on')}`;
+    } else if (dayOfWeek.includes('/')) {
+      const [, interval] = dayOfWeek.split('/');
+      return `${interval}${t('days')}${t('interval')}`;
+    } else {
+      return `${t(`dayNames.${dayOfWeek}`)}${t('on')}`;
+    }
+  }
+}
+

@@ -47,6 +47,7 @@ const resources = {
       on: 'on',
       in: 'in',
       of: 'of',
+      interval: 'interval',
       dayNames: {
         0: 'Sunday',
         1: 'Monday',
@@ -55,7 +56,12 @@ const resources = {
         4: 'Thursday',
         5: 'Friday',
         6: 'Saturday'
-      }
+      },
+      dateFormat: 'yyyy-MM-dd HH:mm:ss zzz',
+      timezoneSuffix: '({{time}} in {{timezone}})',
+      descriptionOrder: ['run', 'minute', 'hour', 'dayOfMonth', 'month', 'dayOfWeek'],
+      useSpaces: true,
+      dayListSeparator: ', '
     }
   },
   ja: {
@@ -103,6 +109,7 @@ const resources = {
       on: 'の',
       in: 'で',
       of: '',
+      interval: '間隔で',
       dayNames: {
         0: '日曜日',
         1: '月曜日',
@@ -111,72 +118,21 @@ const resources = {
         4: '木曜日',
         5: '金曜日',
         6: '土曜日'
-      }
+      },
+      dateFormat: 'yyyy年MM月dd日 HH:mm:ss',
+      timezoneSuffix: '({{timezone}}: {{time}})',
+      descriptionOrder: ['dayOfWeek', 'month', 'dayOfMonth', 'hour', 'minute', 'run'],
+      useSpaces: false,
+      dayListSeparator: '、'
     }
   },
-  ko: {
-    translation: {
-      title: 'Cronus',
-      subtitle: 'Cron 표현식 에디터',
-      cronExpression: 'Cron 표현식',
-      timezone: '시간대',
-      validExpression: '유효한 표현식',
-      invalidExpression: '잘못된 표현식',
-      cronFormat: 'Cron 형식',
-      minute: '분',
-      hour: '시',
-      day: '일',
-      month: '월',
-      weekday: '요일',
-      commonExpressions: '일반적인 표현식',
-      nextExecutions: '다음 {{count}}회 실행 ({{timezone}})',
-      utcNote: 'Cron 표현식은 UTC 시간으로 작동합니다',
-      timezoneConversion: '{{timezone}}에서의 실행 시간',
-      specialCharacters: '특수 문자',
-      anyValue: '임의의 값',
-      valueListSeparator: '값 목록 구분자',
-      rangeOfValues: '값의 범위',
-      stepValues: '단계 값',
-      // Cron descriptions
-      everyMinute: '매분',
-      everyHour: '매시',
-      everyDay: '매일 자정',
-      everySunday: '매주 일요일 자정',
-      everyMonth: '매월 1일 자정',
-      everyWeekday: '평일 오전 9시',
-      everyDayAt5PM: '매일 오후 5시',
-      every15Minutes: '15분마다',
-      every2Hours: '2시간마다',
-      everyMondayNoon: '매주 월요일 정오',
-      // Dynamic descriptions
-      run: '실행',
-      at: '에',
-      every: '매',
-      minutes: '분',
-      hours: '시간',
-      days: '일',
-      months: '월',
-      on: '의',
-      in: '에서',
-      of: '',
-      dayNames: {
-        0: '일요일',
-        1: '월요일',
-        2: '화요일',
-        3: '수요일',
-        4: '목요일',
-        5: '금요일',
-        6: '토요일'
-      }
-    }
-  }
 };
 
 i18n
   .use(initReactI18next)
   .init({
     resources,
-    lng: 'ja', // default language
+    lng: 'en', // default language
     fallbackLng: 'en',
     interpolation: {
       escapeValue: false

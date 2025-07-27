@@ -6,9 +6,9 @@ import {
   validateCronExpression, 
   getNextExecutionTimes,
   commonCronExpressions,
-  timezones,
   parseCronExpression,
-  getLanguageFromTimezone
+  getLanguageFromTimezone,
+  timezoneLanguageMapping
 } from '@/lib/cron';
 import { describeCronExpressionI18n } from '@/lib/cronI18n';
 import '@/lib/i18n';
@@ -30,15 +30,16 @@ export default function CronEditor() {
     
     if (valid) {
       setDescription(describeCronExpressionI18n(cronExpression, t, language, timezone));
-      setNextExecutions(getNextExecutionTimes(cronExpression, 10, timezone));
+      setNextExecutions(getNextExecutionTimes(cronExpression, 3, timezone, t));
     } else {
       setDescription(t('invalidExpression'));
       setNextExecutions([]);
     }
-  }, [cronExpression, timezone, t, i18n]);
+  }, [cronExpression, timezone]);
 
   const handleCronChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setCronExpression(e.target.value);
+    const newValue = e.target.value;
+    setCronExpression(newValue);
   };
 
   const handleTimezoneChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -87,9 +88,9 @@ export default function CronEditor() {
                   onChange={handleTimezoneChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
                 >
-                  {timezones.map((tz) => (
-                    <option key={tz.value} value={tz.value}>
-                      {tz.label}
+                  {Object.entries(timezoneLanguageMapping).map(([timezone]) => (
+                    <option key={timezone} value={timezone}>
+                      {timezone}
                     </option>
                   ))}
                 </select>
@@ -108,7 +109,7 @@ export default function CronEditor() {
 
           {isValid && nextExecutions.length > 0 && (
             <div className="bg-white rounded-lg shadow-lg p-6">
-              <h2 className="text-xl font-semibold mb-4">{t('nextExecutions', { count: 10, timezone })}</h2>
+              <h2 className="text-xl font-semibold mb-4">{t('nextExecutions', { count: 3, timezone })}</h2>
               <div className="space-y-2 max-h-80 overflow-y-auto">
                 {nextExecutions.map((time, index) => (
                   <div key={index} className="flex items-center space-x-3">
