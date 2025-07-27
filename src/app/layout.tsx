@@ -35,7 +35,7 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_US",
     alternateLocale: ["ja_JP"],
-    url: "https://cronus.vercel.app",
+    url: "https://cron-us.vercel.app",
     siteName: "CRONUS",
     title: "CRONUS - Beautiful Cron Expression Editor",
     description:
