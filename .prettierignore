@@ -1,0 +1,6 @@
+dist
+coverage
+.github
+.codeclimate.yml
+*.md
+.claude
