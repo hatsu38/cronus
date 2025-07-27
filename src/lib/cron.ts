@@ -74,15 +74,15 @@ export function describeCronExpression(
 
 
 export const commonCronExpressions = [
-  { expression: '* * * * *', description: 'Every minute' },
-  { expression: '0 * * * *', description: 'Every hour' },
-  { expression: '0 0 * * *', description: 'Every day at midnight' },
-  { expression: '0 0 * * 0', description: 'Every Sunday at midnight' },
-  { expression: '0 0 1 * *', description: 'Every month on the 1st at midnight' },
-  { expression: '0 9 * * 1-5', description: 'Every weekday at 9:00 AM' },
-  { expression: '0 17 * * *', description: 'Every day at 5:00 PM' },
-  { expression: '*/15 * * * *', description: 'Every 15 minutes' },
-  { expression: '0 12 * * 1', description: 'Every Monday at noon' }
+  { expression: '* * * * *', descriptionKey: 'commonExpressions.everyMinute' },
+  { expression: '0 * * * *', descriptionKey: 'commonExpressions.everyHour' },
+  { expression: '0 0 * * *', descriptionKey: 'commonExpressions.everyDayMidnight' },
+  { expression: '0 0 * * 0', descriptionKey: 'commonExpressions.everySundayMidnight' },
+  { expression: '0 0 1 * *', descriptionKey: 'commonExpressions.everyMonthFirst' },
+  { expression: '0 9 * * 1-5', descriptionKey: 'commonExpressions.everyWeekday9AM' },
+  { expression: '0 17 * * *', descriptionKey: 'commonExpressions.everyDay5PM' },
+  { expression: '*/15 * * * *', descriptionKey: 'commonExpressions.every15Minutes' },
+  { expression: '0 12 * * 1', descriptionKey: 'commonExpressions.everyMondayNoon' }
 ];
 
 export const timezoneLanguageMapping: Record<string, string> = {

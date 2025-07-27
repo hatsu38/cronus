@@ -198,7 +198,7 @@ export default function CronEditor() {
 
         <div className="space-y-6">
           <div className="bg-white rounded-lg shadow-lg p-6">
-            <h2 className="text-xl font-semibold mb-4">{t('commonExpressions')}</h2>
+            <h2 className="text-xl font-semibold mb-4">{t('commonExpressionsTitle')}</h2>
             <div className="space-y-2">
               {commonCronExpressions.map((item, index) => (
                 <button
@@ -207,7 +207,7 @@ export default function CronEditor() {
                   className="w-full text-left p-3 rounded-lg border border-gray-200 hover:bg-blue-50 hover:border-blue-300 transition-colors"
                 >
                   <div className="font-mono text-blue-600">{item.expression}</div>
-                  <div className="text-sm text-gray-600 mt-1">{item.description}</div>
+                  <div className="text-sm text-gray-600 mt-1">{t(item.descriptionKey)}</div>
                 </button>
               ))}
             </div>
