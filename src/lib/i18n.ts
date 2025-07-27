@@ -61,7 +61,42 @@ const resources = {
       timezoneSuffix: '({{time}} in {{timezone}})',
       descriptionOrder: ['run', 'minute', 'hour', 'dayOfMonth', 'month', 'dayOfWeek'],
       useSpaces: true,
-      dayListSeparator: ', '
+      dayListSeparator: ', ',
+      // Template patterns for each component
+      templates: {
+        minute: {
+          wildcard: '{{every}} {{minute}}',
+          interval: '{{every}} {{interval}} {{minutes}}',
+          specific: '{{at}} {{minute}} {{value}}',
+          multiple: '{{at}} {{minutes}} {{value}}'
+        },
+        hour: {
+          wildcard: '',
+          interval: ' {{of}} {{every}} {{interval}} {{hours}}',
+          specific: ' {{of}} {{hour}} {{value}}',
+          multiple: ' {{of}} {{hours}} {{value}}'
+        },
+        dayOfMonth: {
+          wildcard: '',
+          interval: ' {{on}} {{every}} {{interval}} {{days}}',
+          specific: ' {{on}} {{day}} {{value}}',
+          multiple: ' {{on}} {{days}} {{value}}'
+        },
+        month: {
+          wildcard: '',
+          specific: ' {{in}} {{month}} {{value}}',
+          multiple: ' {{in}} {{months}} {{value}}'
+        },
+        dayOfWeek: {
+          wildcard: '',
+          interval: ' {{on}} {{every}} {{interval}} {{days}}',
+          specific: ' {{on}} {{value}}',
+          multiple: ' {{on}} {{value}}'
+        },
+        run: {
+          prefix: '{{run}} '
+        }
+      }
     }
   },
   ja: {
@@ -110,6 +145,7 @@ const resources = {
       in: 'で',
       of: '',
       interval: '間隔で',
+      interval_suffix: '間隔で',
       dayNames: {
         0: '日曜日',
         1: '月曜日',
@@ -123,7 +159,42 @@ const resources = {
       timezoneSuffix: '({{timezone}}: {{time}})',
       descriptionOrder: ['dayOfWeek', 'month', 'dayOfMonth', 'hour', 'minute', 'run'],
       useSpaces: false,
-      dayListSeparator: '、'
+      dayListSeparator: '、',
+      // Template patterns for Japanese
+      templates: {
+        minute: {
+          wildcard: '{{every}}{{minute}}{{run}}',
+          interval: '{{interval}}{{minutes}}{{interval_suffix}}{{run}}',
+          specific: '{{value}}{{minute}}{{at}}{{run}}',
+          multiple: '{{value}}{{minute}}{{at}}{{run}}'
+        },
+        hour: {
+          wildcard: '{{every}}{{hour}}',
+          interval: '{{interval}}{{hours}}{{interval_suffix}}',
+          specific: '{{value}}{{hour}}',
+          multiple: '{{value}}{{hour}}{{on}}'
+        },
+        dayOfMonth: {
+          wildcard: '',
+          interval: '{{interval}}{{days}}{{interval_suffix}}',
+          specific: '{{value}}{{day}}{{on}}',
+          multiple: '{{value}}{{day}}{{on}}'
+        },
+        month: {
+          wildcard: '',
+          specific: '{{value}}{{month}}{{on}}',
+          multiple: '{{value}}{{month}}{{on}}'
+        },
+        dayOfWeek: {
+          wildcard: '',
+          interval: '{{interval}}{{days}}{{interval_suffix}}',
+          specific: '{{value}}{{on}}',
+          multiple: '{{value}}{{on}}'
+        },
+        run: {
+          prefix: ''
+        }
+      }
     }
   },
 };

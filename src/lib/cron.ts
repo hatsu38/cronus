@@ -69,8 +69,7 @@ export function describeCronExpression(
   timezone: string = 'UTC',
   t: TFunction
 ): string {
-  const language = getLanguageFromTimezone(timezone);
-  return describeCronExpressionI18n(cronExpression, t, language, timezone);
+  return describeCronExpressionI18n(cronExpression, t, timezone);
 }
 
 
@@ -83,16 +82,19 @@ export const commonCronExpressions = [
   { expression: '0 9 * * 1-5', description: 'Every weekday at 9:00 AM' },
   { expression: '0 17 * * *', description: 'Every day at 5:00 PM' },
   { expression: '*/15 * * * *', description: 'Every 15 minutes' },
-  { expression: '0 */2 * * *', description: 'Every 2 hours' },
   { expression: '0 12 * * 1', description: 'Every Monday at noon' }
 ];
 
 export const timezoneLanguageMapping: Record<string, string> = {
   'UTC': 'en',
   'Asia/Tokyo': 'ja',
-  'America/Los_Angeles': 'en'
+  'America/New_York': 'en',
+  'America/Los_Angeles': 'en',
+  'America/Chicago': 'en',
+  'America/Denver': 'en',
+  'Europe/London': 'en',
+  'Australia/Sydney': 'en',
+  'Australia/Melbourne': 'en',
+  'America/Toronto': 'en',
+  'Pacific/Auckland': 'en',
 };
-
-export function getLanguageFromTimezone(timezone: string): string {
-  return timezoneLanguageMapping[timezone] || 'en';
-}

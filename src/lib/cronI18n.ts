@@ -5,13 +5,12 @@ import { formatInTimeZone } from 'date-fns-tz';
 export function describeCronExpressionI18n(
   cronExpression: string,
   t: TFunction,
-  language: string,
   timezone: string = 'UTC'
 ): string {
   const parts = parseCronExpression(cronExpression);
   if (!parts) return t('invalidExpression');
 
-  return buildCronDescription(parts, t, language, timezone);
+  return buildCronDescription(parts, t, timezone);
 }
 
 function parseCronExpression(cronExpression: string): CronParts | null {
@@ -30,18 +29,18 @@ function parseCronExpression(cronExpression: string): CronParts | null {
   };
 }
 
-function buildCronDescription(parts: CronParts, t: TFunction, language: string, timezone: string): string {
+function buildCronDescription(parts: CronParts, t: TFunction, timezone: string): string {
   const { minute, hour, dayOfMonth, month, dayOfWeek } = parts;
   const descriptionOrder = t('descriptionOrder', { returnObjects: true }) as string[];
   
   // Build description parts using i18n configuration
   const descriptionParts: Record<string, string> = {
     run: buildRunDescription(t),
-    minute: buildMinuteDescription(minute, t),
-    hour: buildHourDescription(hour, t),
-    dayOfMonth: buildDayOfMonthDescription(dayOfMonth, t),
-    month: buildMonthDescription(month, t),
-    dayOfWeek: buildDayOfWeekDescription(dayOfWeek, t)
+    minute: buildComponentDescription('minute', minute, t),
+    hour: buildComponentDescription('hour', hour, t),
+    dayOfMonth: buildComponentDescription('dayOfMonth', dayOfMonth, t),
+    month: buildComponentDescription('month', month, t),
+    dayOfWeek: buildComponentDescription('dayOfWeek', dayOfWeek, t)
   };
   
   // Filter out empty parts and build description in language-specific order
@@ -77,151 +76,95 @@ function getTimeExampleInTimezone(hour: string, minute: string, timezone: string
   }
 }
 
+// Unified template rendering function
+function renderTemplate(template: string, variables: Record<string, string>): string {
+  return template.replace(/\{\{(\w+)\}\}/g, (match, key) => {
+    return variables[key] || '';
+  });
+}
+
+// Determine pattern type based on cron value
+function getPatternType(value: string): 'wildcard' | 'interval' | 'specific' | 'multiple' {
+  if (value === '*') return 'wildcard';
+  if (value.includes('/')) return 'interval';
+  if (value.includes(',')) return 'multiple';
+  return 'specific';
+}
+
+// Template structure type
+interface ComponentTemplates {
+  wildcard?: string;
+  interval?: string;
+  specific?: string;
+  multiple?: string;
+}
+
+interface Templates {
+  minute: ComponentTemplates;
+  hour: ComponentTemplates;
+  dayOfMonth: ComponentTemplates;
+  month: ComponentTemplates;
+  dayOfWeek: ComponentTemplates;
+  run: { prefix: string };
+}
+
+// Unified description builder
+function buildComponentDescription(
+  component: string,
+  value: string,
+  t: TFunction
+): string {
+  const templates = t('templates', { returnObjects: true }) as Templates;
+  const componentTemplates = templates[component as keyof Omit<Templates, 'run'>];
+  
+  if (!componentTemplates) return '';
+  
+  const patternType = getPatternType(value);
+  const template = componentTemplates[patternType];
+  
+  if (!template) return '';
+  
+  // Prepare variables for template rendering
+  const variables: Record<string, string> = {
+    every: t('every'),
+    at: t('at'),
+    on: t('on'),
+    in: t('in'),
+    of: t('of'),
+    run: t('run'),
+    minute: t('minute'),
+    minutes: t('minutes'),
+    hour: t('hour'),
+    hours: t('hours'),
+    day: t('day'),
+    days: t('days'),
+    month: t('month'),
+    months: t('months'),
+    interval_suffix: t('interval_suffix'),
+    value: value
+  };
+  
+  // Handle special cases
+  if (patternType === 'interval') {
+    const [, interval] = value.split('/');
+    variables.interval = interval;
+  }
+  
+  if (component === 'dayOfWeek' && (patternType === 'specific' || patternType === 'multiple')) {
+    if (patternType === 'multiple') {
+      const separator = t('dayListSeparator');
+      const days = value.split(',').map(d => t(`dayNames.${d}`)).join(separator);
+      variables.value = days;
+    } else {
+      variables.value = t(`dayNames.${value}`);
+    }
+  }
+  
+  return renderTemplate(template, variables);
+}
+
 function buildRunDescription(t: TFunction): string {
-  const useSpaces = t('useSpaces');
-  const space = useSpaces ? ' ' : '';
-  return useSpaces ? `${t('run')}${space}` : '';
+  const templates = t('templates', { returnObjects: true }) as Templates;
+  const runTemplate = templates.run?.prefix || '';
+  return renderTemplate(runTemplate, { run: t('run') });
 }
-
-function buildMinuteDescription(minute: string, t: TFunction): string {
-  const useSpaces = t('useSpaces');
-  const space = useSpaces ? ' ' : '';
-  
-  if (minute === '*') {
-    if (useSpaces) {
-      return `${t('every')}${space}${t('minute')}`;
-    } else {
-      return `${t('every')}${t('minute')}${t('run')}`;
-    }
-  } else if (minute.includes('/')) {
-    const [, interval] = minute.split('/');
-    if (useSpaces) {
-      return `${t('every')}${space}${interval}${space}${t('minutes')}`;
-    } else {
-      return `${interval}${t('minutes')}${t('interval')}${t('run')}`;
-    }
-  } else if (minute.includes(',')) {
-    if (useSpaces) {
-      return `${t('at')}${space}${t('minutes')}${space}${minute}`;
-    } else {
-      return `${minute}${t('minute')}${t('at')}${t('run')}`;
-    }
-  } else {
-    if (useSpaces) {
-      return `${t('at')}${space}${t('minute')}${space}${minute}`;
-    } else {
-      return `${minute}${t('minute')}${t('at')}${t('run')}`;
-    }
-  }
-}
-
-function buildHourDescription(hour: string, t: TFunction): string {
-  const useSpaces = t('useSpaces');
-  const space = useSpaces ? ' ' : '';
-  
-  if (hour === '*') {
-    return useSpaces ? '' : `${t('every')}${t('hour')}`;
-  }
-  
-  if (useSpaces) {
-    if (hour.includes('/')) {
-      const [, interval] = hour.split('/');
-      return `${space}${t('of')}${space}${t('every')}${space}${interval}${space}${t('hours')}`;
-    } else if (hour.includes(',')) {
-      return `${space}${t('of')}${space}${t('hours')}${space}${hour}`;
-    } else {
-      return `${space}${t('of')}${space}${t('hour')}${space}${hour}`;
-    }
-  } else {
-    if (hour.includes('/')) {
-      const [, interval] = hour.split('/');
-      return `${interval}${t('hours')}${t('interval')}`;
-    } else if (hour.includes(',')) {
-      return `${hour}${t('hour')}${t('on')}`;
-    } else {
-      return `${hour}${t('hour')}`;
-    }
-  }
-}
-
-function buildDayOfMonthDescription(dayOfMonth: string, t: TFunction): string {
-  if (dayOfMonth === '*') {
-    return '';
-  }
-
-  const useSpaces = t('useSpaces');
-  const space = useSpaces ? ' ' : '';
-
-  if (useSpaces) {
-    if (dayOfMonth.includes('/')) {
-      const [, interval] = dayOfMonth.split('/');
-      return `${space}${t('on')}${space}${t('every')}${space}${interval}${space}${t('days')}`;
-    } else if (dayOfMonth.includes(',')) {
-      return `${space}${t('on')}${space}${t('days')}${space}${dayOfMonth}`;
-    } else {
-      return `${space}${t('on')}${space}${t('day')}${space}${dayOfMonth}`;
-    }
-  } else {
-    if (dayOfMonth.includes('/')) {
-      const [, interval] = dayOfMonth.split('/');
-      return `${interval}${t('days')}${t('interval')}`;
-    } else if (dayOfMonth.includes(',')) {
-      return `${dayOfMonth}${t('day')}${t('on')}`;
-    } else {
-      return `${dayOfMonth}${t('day')}${t('on')}`;
-    }
-  }
-}
-
-function buildMonthDescription(month: string, t: TFunction): string {
-  if (month === '*') {
-    return '';
-  }
-
-  const useSpaces = t('useSpaces');
-  const space = useSpaces ? ' ' : '';
-
-  if (useSpaces) {
-    if (month.includes(',')) {
-      return `${space}${t('in')}${space}${t('months')}${space}${month}`;
-    } else {
-      return `${space}${t('in')}${space}${t('month')}${space}${month}`;
-    }
-  } else {
-    if (month.includes(',')) {
-      return `${month}${t('month')}${t('on')}`;
-    } else {
-      return `${month}${t('month')}${t('on')}`;
-    }
-  }
-}
-
-function buildDayOfWeekDescription(dayOfWeek: string, t: TFunction): string {
-  if (dayOfWeek === '*') {
-    return '';
-  }
-
-  const useSpaces = t('useSpaces');
-  const space = useSpaces ? ' ' : '';
-  const separator = t('dayListSeparator');
-
-  if (useSpaces) {
-    if (dayOfWeek.includes(',')) {
-      const days = dayOfWeek.split(',').map(d => t(`dayNames.${d}`)).join(separator);
-      return `${space}${t('on')}${space}${days}`;
-    } else {
-      return `${space}${t('on')}${space}${t(`dayNames.${dayOfWeek}`)}`;
-    }
-  } else {
-    if (dayOfWeek.includes(',')) {
-      const days = dayOfWeek.split(',').map(d => t(`dayNames.${d}`)).join(separator);
-      return `${days}${t('on')}`;
-    } else if (dayOfWeek.includes('/')) {
-      const [, interval] = dayOfWeek.split('/');
-      return `${interval}${t('days')}${t('interval')}`;
-    } else {
-      return `${t(`dayNames.${dayOfWeek}`)}${t('on')}`;
-    }
-  }
-}
-

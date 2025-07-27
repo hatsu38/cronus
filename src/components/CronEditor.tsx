@@ -7,7 +7,6 @@ import {
   getNextExecutionTimes,
   commonCronExpressions,
   parseCronExpression,
-  getLanguageFromTimezone,
   timezoneLanguageMapping
 } from '@/lib/cron';
 import { describeCronExpressionI18n } from '@/lib/cronI18n';
@@ -22,19 +21,19 @@ export default function CronEditor() {
   const [nextExecutions, setNextExecutions] = useState<string[]>([]);
 
   useEffect(() => {
-    const language = getLanguageFromTimezone(timezone);
-    i18n.changeLanguage(language);
+    i18n.changeLanguage(timezoneLanguageMapping[timezone]);
     
     const valid = validateCronExpression(cronExpression);
     setIsValid(valid);
     
     if (valid) {
-      setDescription(describeCronExpressionI18n(cronExpression, t, language, timezone));
+      setDescription(describeCronExpressionI18n(cronExpression, t, timezone));
       setNextExecutions(getNextExecutionTimes(cronExpression, 3, timezone, t));
     } else {
       setDescription(t('invalidExpression'));
       setNextExecutions([]);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cronExpression, timezone]);
 
   const handleCronChange = (e: React.ChangeEvent<HTMLInputElement>) => {
