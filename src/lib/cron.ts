@@ -31,7 +31,7 @@ export function validateCronExpression(cronExpression: string): boolean {
   try {
     cronParser.parse(cronExpression);
     return true;
-  } catch (error) {
+  } catch {
     return false;
   }
 }
@@ -55,11 +55,21 @@ export function getNextExecutionTimes(
     for (let i = 0; i < count; i++) {
       const next = interval.next();
       // Convert UTC execution time to the selected timezone for display
-      nextTimes.push(formatInTimeZone(next.toDate(), timezone, dateFormat));
+      const formattedTime = formatInTimeZone(
+        next.toDate(),
+        timezone,
+        dateFormat,
+      );
+
+      // Add timezone abbreviation suffix
+      const timezoneAbbr = formatInTimeZone(next.toDate(), timezone, "zzz");
+      const formattedWithTimezone = `${formattedTime} (${timezoneAbbr})`;
+
+      nextTimes.push(formattedWithTimezone);
     }
 
     return nextTimes;
-  } catch (error) {
+  } catch {
     return [];
   }
 }

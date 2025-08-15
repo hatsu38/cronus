@@ -58,7 +58,7 @@ const resources = {
         5: "Friday",
         6: "Saturday",
       },
-      dateFormat: "yyyy-MM-dd HH:mm:ss zzz",
+      dateFormat: "yyyy-MM-dd HH:mm:ss",
       timezoneSuffix: "({{time}} in {{timezone}})",
       descriptionOrder: [
         "run",
