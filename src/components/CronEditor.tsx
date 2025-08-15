@@ -10,7 +10,11 @@ import {
   parseCronExpression,
   timezoneLanguageMapping,
 } from "@/lib/cron";
-import { convertCronTimeToTimezone, describeCronWithTimezone, enhanceDescriptionWithTimezone } from "@/lib/cronI18n";
+import {
+  convertCronTimeToTimezone,
+  describeCronWithTimezone,
+  enhanceDescriptionWithTimezone,
+} from "@/lib/cronI18n";
 import Image from "next/image";
 import "@/lib/i18n";
 import Logo from "@/components/images/logo.png";
@@ -319,9 +323,16 @@ export default function CronEditor() {
                     {
                       value: cronParts?.hour || "*",
                       label: t("hour"),
-                      range: timezone !== "UTC" && cronParts?.hour !== "*" && cronParts?.minute !== "*" 
-                        ? convertCronTimeToTimezone(cronParts?.hour || "*", cronParts?.minute || "*", timezone)
-                        : "(0-23)",
+                      range:
+                        timezone !== "UTC" &&
+                        cronParts?.hour !== "*" &&
+                        cronParts?.minute !== "*"
+                          ? convertCronTimeToTimezone(
+                              cronParts?.hour || "*",
+                              cronParts?.minute || "*",
+                              timezone,
+                            )
+                          : "(0-23)",
                       color: "from-orange-400 to-red-400",
                     },
                     {
@@ -397,7 +408,12 @@ export default function CronEditor() {
                             : "text-slate-600"
                         }`}
                       >
-                        {enhanceDescriptionWithTimezone(item.expression, item.descriptionKey, t, timezone)}
+                        {enhanceDescriptionWithTimezone(
+                          item.expression,
+                          item.descriptionKey,
+                          t,
+                          timezone,
+                        )}
                       </div>
                     </button>
                   ))}
